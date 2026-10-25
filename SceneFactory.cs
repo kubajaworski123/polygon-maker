@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GKProjekt1.Constraints;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -28,6 +29,10 @@ namespace GKProjekt1
             poly2.AddVertex(750, 450);
 
             scene.AddPolygon(poly2);
+
+            ConstraintSolver.TryApply(scene, new LengthConstraint(poly1.Edges[2], 280f));
+            ConstraintSolver.TryApply(scene, new ParallelConstraint(poly1.Edges[1], poly2.Edges[1]));
+            ConstraintSolver.TryApply(scene, new LengthConstraint(poly2.Edges[0], 250f));
 
             return scene;
         }

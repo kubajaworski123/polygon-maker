@@ -14,12 +14,37 @@ public class SceneRenderer
     public Color VertexBorderColor { get; set; } = Color.Black;
     public Color EdgeColor { get; set; } = Color.Black;
     public Color ControlPolygonColor { get; set; } = Color.Gray;
+    public Color ConstraintLabelColor { get; set; } = Color.DarkBlue;
+    public float ConstraintLabelOffset { get; set; } = 14f;
+    public float ConstraintLabelSpacing { get; set; } = 16f;
+    private readonly Font constraintLabelFont = new Font("Segoe UI", 9f);
 
     public void Render(Graphics g, Bitmap bufferBitmap, Scene scene, DrawingStrategy strategy)
     {
         //g.SmoothingMode = SmoothingMode.AntiAlias;
         DrawEdges(g, bufferBitmap, scene, strategy);
         DrawVertices(scene, g, strategy);
+        DrawConstraintLabels(g, scene);
+    }
+    private void DrawConstraintLabels(Graphics g, Scene scene)
+    {
+        using var brush = new SolidBrush(ConstraintLabelColor);
+        foreach (var edge in scene.AllEdges)
+        {
+            if (edge.Constraints.Count == 0)
+            {
+                continue;
+            }
+            PointF middle = edge.GetMiddle();
+            PointF normal = GeometryUtils.PerpendicularVector(edge.GetDirection());
+            for (int i = 0; i < edge.Constraints.Count; i++)
+            {
+                string label = edge.Constraints[i].Label;
+                SizeF size = g.MeasureString(label, constraintLabelFont);
+                PointF center = GeometryUtils.PointInDirection(middle, normal, ConstraintLabelOffset + ConstraintLabelSpacing * i);
+                g.DrawString(label, constraintLabelFont, brush, center.X - size.Width / 2f, center.Y - size.Height / 2f);
+            }
+        }
     }
     private void DrawVertices(Scene scene, Graphics g, DrawingStrategy strategy)
     {

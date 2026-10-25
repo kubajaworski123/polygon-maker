@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GKProjekt1.Constraints;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,11 +13,14 @@ namespace GKProjekt1.States
             : base(window, scene, startMousePos)
         {
             this.polygon = polygon;
-            this.vertex = vertex;
+            this.vertex = vertex;               
         }
         protected override void OnDrag(float dx, float dy, Point currentMousePos)
         {
-            vertex.MoveByVector(dx, dy);
+            if (!ConstraintSolver.TryMoveVertex(scene, vertex, currentMousePos))
+            {
+                polygon.Move(currentMousePos.X - vertex.Position.X, currentMousePos.Y - vertex.Position.Y);
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 using GKProjekt1.ClickDetect;
+using GKProjekt1.Constraints;
 using GKProjekt1.DrawingStrategies;
 using GKProjekt1.States;
 
@@ -12,7 +13,6 @@ namespace GKProjekt1
         private ContextMenuStrip edgeContextMenu;
         private ContextMenuStrip vertexContextMenu;
         private Bitmap canvasBitmap;
-        private ClickData? activeClickData;
         private IActionState currentState;
 
         public MainWindow()
@@ -98,13 +98,72 @@ namespace GKProjekt1
                 Invalidate();
             });
 
+            var lengthItem = new ToolStripMenuItem("Ustaw dlugosc...", null, (s, e) => SetEdgeLength(edge));
+
+            var parallelItem = new ToolStripMenuItem("Rownolegla do...", null, (s, e) =>
+            {
+                TransitionTo(new SelectingParallelEdgeState(this, scene, edge));
+            });
+
             edgeContextMenu.Items.Add(lineItem);
             edgeContextMenu.Items.Add(bezierItem);
             edgeContextMenu.Items.Add(arcItem);
             edgeContextMenu.Items.Add(new ToolStripSeparator());
             edgeContextMenu.Items.Add(splitItem);
+            edgeContextMenu.Items.Add(new ToolStripSeparator());
+            edgeContextMenu.Items.Add(lengthItem);
+            edgeContextMenu.Items.Add(parallelItem);
+
+            if (edge.Constraints.Count > 0)
+            {
+                edgeContextMenu.Items.Add(new ToolStripSeparator());
+                foreach (var constraint in edge.Constraints.ToList())
+                {
+                    edgeContextMenu.Items.Add(new ToolStripMenuItem($"Usun ograniczenie: {constraint.Label}", null, (s, e) =>
+                    {
+                        constraint.Detach();
+                        Invalidate();
+                    }));
+                }
+            }
 
             edgeContextMenu.Show(this, location);
+        }
+
+        private void SetEdgeLength(Edge edge)
+        {
+            using var dialog = new LengthDialog(edge.GetLength());
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            var existing = edge.Constraints.OfType<LengthConstraint>().FirstOrDefault();
+            if (existing != null)
+            {
+                float previousLength = existing.Length;
+                existing.Length = dialog.Value;
+                if (!ConstraintSolver.TryApply(scene, existing))
+                {
+                    existing.Length = previousLength;
+                    ShowConstraintConflict();
+                }
+            }
+            else
+            {
+                var constraint = new LengthConstraint(edge, dialog.Value);
+                if (!ConstraintSolver.TryApply(scene, constraint))
+                {
+                    constraint.Detach();
+                    ShowConstraintConflict();
+                }
+            }
+            Invalidate();
+        }
+
+        private void ShowConstraintConflict()
+        {
+            MessageBox.Show(this, "Nie mozna spelnic tego ograniczenia razem z istniejacymi.", "Ograniczenia");
         }
 
         public void ShowVertexContextMenu(Point location, Vertex vertex, Polygon polygon)
