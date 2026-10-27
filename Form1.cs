@@ -15,6 +15,7 @@ namespace GKProjekt1
         private ContextMenuStrip vertexContextMenu;
         private Bitmap canvasBitmap;
         private IActionState currentState;
+        private RadioButton XiaolinWuAlgorithmRadioButton;
 
         public MainWindow()
         {
@@ -37,8 +38,16 @@ namespace GKProjekt1
             MouseMove += MainWindow_MouseMove;
             MouseUp += MainWindow_MouseUp;
             Paint += MainWindow_Paint;
+            XiaolinWuAlgorithmRadioButton = new RadioButton
+            {
+                Text = "Xiaolin Wu",
+                Location = new Point(310, 8),
+                AutoSize = true
+            };
+            panel1.Controls.Add(XiaolinWuAlgorithmRadioButton);
             LibraryAlgorithmsRadioButton.CheckedChanged += StrategyRadioButton_CheckedChanged;
             BresenhamAlgorithmsRadioButton.CheckedChanged += StrategyRadioButton_CheckedChanged;
+            XiaolinWuAlgorithmRadioButton.CheckedChanged += StrategyRadioButton_CheckedChanged;
             usageToolStripMenuItem.Click += (s, e) => ShowHelp(usageToolStripMenuItem.Text ?? "", HelpTopics.Usage);
             assumptionsToolStripMenuItem.Click += (s, e) => ShowHelp(assumptionsToolStripMenuItem.Text ?? "", HelpTopics.Assumptions);
             dataModelToolStripMenuItem.Click += (s, e) => ShowHelp(dataModelToolStripMenuItem.Text ?? "", HelpTopics.DataModel);
@@ -265,6 +274,10 @@ namespace GKProjekt1
             else if (BresenhamAlgorithmsRadioButton.Checked)
             {
                 currentStrategy = new BresenhamDrawingStrategy();
+            }
+            else if (XiaolinWuAlgorithmRadioButton.Checked)
+            {
+                currentStrategy = new XiaolinWuDrawingStrategy();
             }
 
             Invalidate();
