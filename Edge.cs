@@ -11,6 +11,7 @@ namespace GKProjekt1
         public Vertex Start { get;}
         public Vertex End { get;}
         public EdgeType Type { get; set; } = EdgeType.Line;
+        public int Width { get; set; } = 1;
         public BezierControlPoint BezierPoint1 { get; }
         public BezierControlPoint BezierPoint2 { get; }
         public List<EdgeConstraint> Constraints { get; } = new();

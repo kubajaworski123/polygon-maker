@@ -28,6 +28,7 @@ namespace GKProjekt1.SceneSaving
     public class EdgeDto
     {
         public EdgeType Type { get; set; }
+        public int Width { get; set; } = 1;
         public PointDto? C1 { get; set; }
         public PointDto? C2 { get; set; }
     }

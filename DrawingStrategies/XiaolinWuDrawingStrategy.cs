@@ -6,12 +6,14 @@ namespace GKProjekt1.DrawingStrategies
 {
     public class XiaolinWuDrawingStrategy : DrawingStrategy
     {
-        public override void DrawLine(Graphics g, Bitmap buffer, Point p1, Point p2, Color color)
+        public override void DrawLine(Graphics g, Bitmap buffer, Point p1, Point p2, Color color, int width)
         {
             if (buffer == null)
             {
                 return;
             }
+
+            width = Math.Max(1, width);
 
             int x0 = p1.X;
             int y0 = p1.Y;
@@ -34,18 +36,37 @@ namespace GKProjekt1.DrawingStrategies
             float y = y0;
             for (int x = x0; x <= x1; x++)
             {
-                int iy = (int)Math.Floor(y);
-                float frac = y - iy;
-                Plot(buffer, x, iy, 1f - frac, steep, color);
-                Plot(buffer, x, iy + 1, frac, steep, color);
+                int flor_y = (int)Math.Floor(y);
+                float frac = y - flor_y;
+                if (width == 1)
+                {
+                    Plot(buffer, x, flor_y, 1f - frac, steep, color);
+                    Plot(buffer, x, flor_y + 1, frac, steep, color);
+                }
+                else
+                {
+                    int start = flor_y - (width - 1) / 2;
+                    for (int i = 0; i < width; i++)
+                    {
+                        Plot(buffer, x, start + i, 1f, steep, color);
+                    }
+                    if (frac > 0f)
+                    {
+                        Plot(buffer, x, start - 1, 1f - frac, steep, color);
+                    }
+                    Plot(buffer, x, start + width, frac, steep, color);
+                }
                 y += m;
             }
         }
 
-        public override void DrawBezier(Graphics g, Bitmap buffer, PointF p0, PointF p1, PointF p2, PointF p3, Color color)
+        public override void DrawBezier(Graphics g, Bitmap buffer, PointF p0, PointF p1, PointF p2, PointF p3, Color color, int width)
         {
-            using var pen = new Pen(color, 1f);
-            g.DrawBezier(pen, p0, p1, p2, p3);
+            List<Point> points = ComputeBezierPoints(p0, p1, p2, p3);
+            for (int i = 1; i < points.Count; i++)
+            {
+                DrawLine(g, buffer, points[i - 1], points[i], color, width);
+            }
         }
 
         private static void Plot(Bitmap buffer, int x, int y, float coverage, bool steep, Color color)

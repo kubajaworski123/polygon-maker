@@ -53,7 +53,7 @@ namespace GKProjekt1.SceneSaving
                 {
                     Edge edge = polygon.Edges[j];
                     index[edge] = [i, j];
-                    var edgeDto = new EdgeDto { Type = edge.Type };
+                    var edgeDto = new EdgeDto { Type = edge.Type, Width = edge.Width };
                     if (edge.Type == EdgeType.Bezier)
                     {
                         edgeDto.C1 = new PointDto { X = edge.BezierPoint1.Position.X, Y = edge.BezierPoint1.Position.Y };
@@ -117,6 +117,7 @@ namespace GKProjekt1.SceneSaving
                     polygon.Vertices[i].ExplicitContinuity = polygonDto.Vertices[i].Continuity;
                     EdgeDto edgeDto = polygonDto.Edges[i];
                     Edge edge = polygon.Edges[i];
+                    edge.Width = Math.Max(1, edgeDto.Width);
                     if (edgeDto.Type == EdgeType.Bezier)
                     {
                         if (edgeDto.C1 == null || edgeDto.C2 == null)

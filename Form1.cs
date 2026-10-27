@@ -154,6 +154,7 @@ namespace GKProjekt1
             });
 
             var lengthItem = new ToolStripMenuItem("Ustaw dlugosc...", null, (s, e) => SetEdgeLength(edge));
+            var widthItem = new ToolStripMenuItem("Ustaw szerokosc...", null, (s, e) => SetEdgeWidth(edge));
 
             var parallelItem = new ToolStripMenuItem("Rownolegla do...", null, (s, e) =>
             {
@@ -167,6 +168,7 @@ namespace GKProjekt1
             edgeContextMenu.Items.Add(splitItem);
             edgeContextMenu.Items.Add(new ToolStripSeparator());
             edgeContextMenu.Items.Add(lengthItem);
+            edgeContextMenu.Items.Add(widthItem);
             edgeContextMenu.Items.Add(parallelItem);
 
             if (edge.Constraints.Count > 0)
@@ -183,6 +185,18 @@ namespace GKProjekt1
             }
 
             edgeContextMenu.Show(this, location);
+        }
+
+        private void SetEdgeWidth(Edge edge)
+        {
+            using var dialog = new WidthDialog(edge.Width);
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            edge.Width = dialog.Value;
+            Invalidate();
         }
 
         private void SetEdgeLength(Edge edge)

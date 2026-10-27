@@ -95,7 +95,7 @@ public class SceneRenderer
                 {
                     Point p1 = Point.Round(edge.Start.Position);
                     Point p2 = Point.Round(edge.End.Position);
-                    strategy.DrawLine(g, bufferBitmap, p1, p2, EdgeColor);
+                    strategy.DrawLine(g, bufferBitmap, p1, p2, EdgeColor, edge.Width);
                 }
                 else if (edge.Type == EdgeType.Bezier)
                 {
@@ -108,7 +108,7 @@ public class SceneRenderer
                     }
                     strategy.DrawCircle(g, edge.BezierPoint1.Position, ControlPointRadius, VertexFillColor, ControlPolygonColor);
                     strategy.DrawCircle(g, edge.BezierPoint2.Position, ControlPointRadius, VertexFillColor, ControlPolygonColor);
-                    strategy.DrawBezier(g, bufferBitmap, edge.Start.Position, edge.BezierPoint1.Position, edge.BezierPoint2.Position, edge.End.Position, EdgeColor);
+                    strategy.DrawBezier(g, bufferBitmap, edge.Start.Position, edge.BezierPoint1.Position, edge.BezierPoint2.Position, edge.End.Position, EdgeColor, edge.Width);
                 }
                 else if (edge.Type == EdgeType.Arc)
                 {
@@ -119,11 +119,11 @@ public class SceneRenderer
                     ArcGeometry? arc = edge.GetArcGeometry();
                     if (arc.HasValue)
                     {
-                        strategy.DrawArc(g, bufferBitmap, arc.Value, EdgeColor);
+                        strategy.DrawArc(g, bufferBitmap, arc.Value, EdgeColor, edge.Width);
                     }
                     else
                     {
-                        strategy.DrawLine(g, bufferBitmap, Point.Round(edge.Start.Position), Point.Round(edge.End.Position), EdgeColor);
+                        strategy.DrawLine(g, bufferBitmap, Point.Round(edge.Start.Position), Point.Round(edge.End.Position), EdgeColor, edge.Width);
                     }
                 }
             }
