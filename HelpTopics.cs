@@ -87,6 +87,11 @@ namespace GKProjekt1
                 G0 only requires the shared vertex.
                 G1 requires the outgoing tangent to be a positive multiple of the incoming one, so the handles stay on one straight line through the vertex and keep their current length.
                 C1 requires the two tangent vectors to be equal.
+                A dragged vertex, a newly added constraint, or a control point that must rotate a neighboring line is resolved by propagation. Every vertex and control point is copied first, so the whole change can be undone.
+                The vertices that the user moved, or that the new constraint fixes, are locked. A queue starts with those vertices. Each of them is taken in turn, and both of its edges are corrected.
+                An edge with no constraint is left alone. Otherwise the free endpoint is placed at the required length and in the required direction, measured from the locked endpoint. The direction comes from the parallel partner. If the edge has no parallel partner, its current direction is kept. Parallelism does not distinguish a direction from its opposite, so the chosen direction is the one that points the same way as the edge already does. The length comes from the length constraint, or stays as it is when the edge has none. The moved endpoint is locked and put at the back of the queue, so its own edges are corrected later. A vertex is moved at most once, and the queue always runs out.
+                When both ends of an edge are already locked, its direction can no longer change. Its length is only checked. If a required length is missed by more than half a pixel, the attempt fails. A parallel partner of that edge is then rotated about one of its ends, by the same rule, including a partner that belongs to another polygon.
+                After the queue is empty, every constraint on the scene is tested. On success, Bezier handles at the moved vertices and at their neighbors are corrected for G1 or C1..
                 
                 Arcs
                 With G0 at both ends, the center is the midpoint of the chord and the radius is half the chord length.

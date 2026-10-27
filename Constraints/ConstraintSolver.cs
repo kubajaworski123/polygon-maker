@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GKProjekt1.Constraints
 {
-    public static class ConstraintSolver
+    public static class  ConstraintSolver
     {
         private const float Eps = 0.01f;
         private const float LengthTolerance = 0.5f;
