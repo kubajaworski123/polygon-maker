@@ -17,14 +17,43 @@ public class SceneRenderer
     public Color ConstraintLabelColor { get; set; } = Color.DarkBlue;
     public float ConstraintLabelOffset { get; set; } = 14f;
     public float ConstraintLabelSpacing { get; set; } = 16f;
-    private readonly Font constraintLabelFont = new Font("Segoe UI", 9f);
+    public Color ContinuityLabelColor { get; set; } = Color.DarkGreen;
+    public float ContinuityLabelOffset { get; set; } = 16f;
+    private readonly Font labelFont = new Font("Segoe UI", 9f);
 
     public void Render(Graphics g, Bitmap bufferBitmap, Scene scene, DrawingStrategy strategy)
     {
-        //g.SmoothingMode = SmoothingMode.AntiAlias;
         DrawEdges(g, bufferBitmap, scene, strategy);
         DrawVertices(scene, g, strategy);
         DrawConstraintLabels(g, scene);
+        DrawContinuityLabels(g, scene);
+    }
+    private void DrawContinuityLabels(Graphics g, Scene scene)
+    {
+        using var brush = new SolidBrush(ContinuityLabelColor);
+        foreach (var polygon in scene.Polygons)
+        {
+            foreach (var vertex in polygon.Vertices)
+            {
+                if (vertex.PrevV == null || vertex.NextV == null
+                    || !(vertex.HasAdjacentEdgeOfType(EdgeType.Bezier) || vertex.HasAdjacentEdgeOfType(EdgeType.Arc))
+                    || vertex.GetEffectiveContinuity() == ContinuityType.G0)
+                {
+                    continue;
+                }
+                PointF toPrev = GeometryUtils.Normalize(GeometryUtils.DirectionVector(vertex.Position, vertex.PrevV.Position));
+                PointF toNext = GeometryUtils.Normalize(GeometryUtils.DirectionVector(vertex.Position, vertex.NextV.Position));
+                PointF bisector = new PointF(toPrev.X + toNext.X, toPrev.Y + toNext.Y);
+                PointF outward = GeometryUtils.Length(bisector) < 1e-3f
+                    ? GeometryUtils.PerpendicularVector(toNext)
+                    : GeometryUtils.Scale(bisector, -1f);
+
+                string label = vertex.GetEffectiveContinuity().ToString();
+                SizeF size = g.MeasureString(label, labelFont);
+                PointF center = GeometryUtils.PointInDirection(vertex.Position, outward, ContinuityLabelOffset);
+                g.DrawString(label, labelFont, brush, center.X - size.Width / 2f, center.Y - size.Height / 2f);
+            }
+        }
     }
     private void DrawConstraintLabels(Graphics g, Scene scene)
     {
@@ -40,9 +69,9 @@ public class SceneRenderer
             for (int i = 0; i < edge.Constraints.Count; i++)
             {
                 string label = edge.Constraints[i].Label;
-                SizeF size = g.MeasureString(label, constraintLabelFont);
+                SizeF size = g.MeasureString(label, labelFont);
                 PointF center = GeometryUtils.PointInDirection(middle, normal, ConstraintLabelOffset + ConstraintLabelSpacing * i);
-                g.DrawString(label, constraintLabelFont, brush, center.X - size.Width / 2f, center.Y - size.Height / 2f);
+                g.DrawString(label, labelFont, brush, center.X - size.Width / 2f, center.Y - size.Height / 2f);
             }
         }
     }
@@ -87,7 +116,15 @@ public class SceneRenderer
                     {
                         g.DrawLine(dashPen, edge.Start.Position, edge.End.Position);
                     }
-                    strategy.DrawArc(g, bufferBitmap, edge.Start.Position, edge.End.Position, EdgeColor);
+                    ArcGeometry? arc = edge.GetArcGeometry();
+                    if (arc.HasValue)
+                    {
+                        strategy.DrawArc(g, bufferBitmap, arc.Value, EdgeColor);
+                    }
+                    else
+                    {
+                        strategy.DrawLine(g, bufferBitmap, Point.Round(edge.Start.Position), Point.Round(edge.End.Position), EdgeColor);
+                    }
                 }
             }
         }

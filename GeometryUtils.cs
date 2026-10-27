@@ -51,6 +51,7 @@ public static class GeometryUtils
         return new PointF(point.X + dx, point.Y + dy);
     }
     public static float Length(PointF v) => MathF.Sqrt(DotProduct(v, v));
+    public static PointF Scale(PointF v, float factor) => new PointF(v.X * factor, v.Y * factor);
 
     public static PointF Normalize(PointF v)
     {

@@ -8,7 +8,6 @@ namespace GKProjekt1
     {
         private readonly NumericUpDown input;
         public float Value => (float)input.Value;
-
         public LengthDialog(float initialLength)
         {
             Text = "Dlugosc krawedzi";

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GKProjekt1.Constraints;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +7,7 @@ namespace GKProjekt1
 {
     public class Vertex : Node
     {
-        public ContinuityType Continuity { get; set; } = ContinuityType.G1;
+        public ContinuityType? ExplicitContinuity { get; set; }
         public Edge? InEdge { get; set; }
         public Edge? OutEdge { get; set; }
         public Vertex? NextV  => OutEdge?.End ?? null;
@@ -20,6 +21,35 @@ namespace GKProjekt1
         {
             Position = position;
         }
+        public void SetContinuity(ContinuityType continuity)
+        {
+            ExplicitContinuity = continuity;
+            ContinuityEnforcer.Enforce(this);
+        }
+        public bool HasAdjacentEdgeOfType(EdgeType type) => InEdge?.Type == type || OutEdge?.Type == type;
+        public ContinuityType GetEffectiveContinuity()
+        {
+            if (ExplicitContinuity.HasValue)
+            {
+                return ExplicitContinuity.Value;
+            }
+            if (!HasAdjacentEdgeOfType(EdgeType.Bezier))
+            {
+                return ContinuityType.G0;
+            }
+            if (InEdge?.Type == EdgeType.Arc && InEdge.Start.GetEffectiveContinuity() != ContinuityType.G0)
+            {
+                return ContinuityType.G0;
+            }
+            if (OutEdge?.Type == EdgeType.Arc && OutEdge.End.ExplicitContinuity is ContinuityType explicitEnd && explicitEnd != ContinuityType.G0)
+            {
+                return ContinuityType.G0;
+            }
+            return ContinuityType.G1;
+        }
+        public bool CanHaveG1() =>
+            !(InEdge?.Type == EdgeType.Arc && InEdge.Start.GetEffectiveContinuity() != ContinuityType.G0)
+            && !(OutEdge?.Type == EdgeType.Arc && OutEdge.End.GetEffectiveContinuity() != ContinuityType.G0);
         public void MoveByVector(float dx, float dy)
         {
             Position = new PointF(Position.X + dx, Position.Y + dy);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GKProjekt1.Constraints;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -58,6 +59,7 @@ namespace GKProjekt1
             }
 
             RebuildEdges();
+            ContinuityEnforcer.EnforceAround([newVertex]);
             return newVertex;
         }
         public bool RemoveVertex(Vertex vertex)
@@ -67,12 +69,22 @@ namespace GKProjekt1
                 return false;
             }
 
+            Vertex? prev = vertex.PrevV;
+            Vertex? next = vertex.NextV;
             bool removed = Vertices.Remove(vertex);
             if (removed)
             {
                 vertex.InEdge = null;
                 vertex.OutEdge = null;
                 RebuildEdges();
+                if (prev != null)
+                {
+                    ContinuityEnforcer.Enforce(prev);
+                }
+                if (next != null)
+                {
+                    ContinuityEnforcer.Enforce(next);
+                }
             }
             return removed;
         }

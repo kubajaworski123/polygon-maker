@@ -24,8 +24,8 @@ namespace GKProjekt1.States
                     case ClickTarget.Vertex when hit.Vertex != null && hit.Polygon != null:
                         window.TransitionTo(new DraggingVertexState(window, scene, hit.Polygon, hit.Vertex, e.Location));
                         break;
-                    case ClickTarget.BezierControlPoint when hit.ControlPoint != null:
-                        window.TransitionTo(new DraggingControlPointState(window, scene, hit.ControlPoint, e.Location));
+                    case ClickTarget.BezierControlPoint when hit.ControlPoint != null && hit.Polygon != null:
+                        window.TransitionTo(new DraggingControlPointState(window, scene, hit.Polygon, hit.ControlPoint, e.Location));
                         break;
                     case ClickTarget.Polygon when hit.Polygon != null:
                         window.TransitionTo(new DraggingPolygonState(window, scene, hit.Polygon, e.Location));

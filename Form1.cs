@@ -78,9 +78,6 @@ namespace GKProjekt1
             var bezierItem = new ToolStripMenuItem("Krzywa Beziera", null, (s, e) =>
             {
                 edge.SetToBezier();
-                // Domyslne ustawienie ciaglosci G1 w sasiadujacych wierzcholkach zgodnie z wymaganiem
-                edge.Start.Continuity = ContinuityType.G1;
-                edge.End.Continuity = ContinuityType.G1;
                 Invalidate();
             })
             { Checked = edge.Type == EdgeType.Bezier };
@@ -170,26 +167,30 @@ namespace GKProjekt1
         {
             vertexContextMenu.Items.Clear();
 
+            ContinuityType continuity = vertex.GetEffectiveContinuity();
+            bool nextToBezier = vertex.HasAdjacentEdgeOfType(EdgeType.Bezier);
+            bool nextToArc = vertex.HasAdjacentEdgeOfType(EdgeType.Arc);
+
             var g0Item = new ToolStripMenuItem("Ciaglosc G0", null, (s, e) =>
             {
-                vertex.Continuity = ContinuityType.G0;
+                vertex.SetContinuity(ContinuityType.G0);
                 Invalidate();
             })
-            { Checked = vertex.Continuity == ContinuityType.G0 };
+            { Checked = continuity == ContinuityType.G0, Enabled = nextToBezier || nextToArc };
 
             var g1Item = new ToolStripMenuItem("Ciaglosc G1", null, (s, e) =>
             {
-                vertex.Continuity = ContinuityType.G1;
+                vertex.SetContinuity(ContinuityType.G1);
                 Invalidate();
             })
-            { Checked = vertex.Continuity == ContinuityType.G1 };
+            { Checked = continuity == ContinuityType.G1, Enabled = (nextToBezier || nextToArc) && vertex.CanHaveG1() };
 
             var c1Item = new ToolStripMenuItem("Ciaglosc C1", null, (s, e) =>
             {
-                vertex.Continuity = ContinuityType.C1;
+                vertex.SetContinuity(ContinuityType.C1);
                 Invalidate();
             })
-            { Checked = vertex.Continuity == ContinuityType.C1 };
+            { Checked = continuity == ContinuityType.C1, Enabled = nextToBezier && !nextToArc };
 
             var deleteItem = new ToolStripMenuItem("Usun wierzcholek", null, (s, e) =>
             {
@@ -217,7 +218,7 @@ namespace GKProjekt1
                 currentStrategy = new BresenhamDrawingStrategy();
             }
 
-            Invalidate(); // Wymuszenie ponownego przerysowania okna
+            Invalidate();
         }
     }
 }

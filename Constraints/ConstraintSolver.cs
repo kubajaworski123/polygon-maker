@@ -6,7 +6,7 @@ namespace GKProjekt1.Constraints
 {
     public static class ConstraintSolver
     {
-        private const float Epsilon = 0.01f;
+        private const float Eps = 0.01f;
         private const float LengthTolerance = 0.5f;
 
         public static bool TryMoveVertex(Scene scene, Vertex vertex, PointF target) =>
@@ -14,6 +14,38 @@ namespace GKProjekt1.Constraints
 
         public static bool TryApply(Scene scene, EdgeConstraint constraint) =>
             Solve(scene, constraint.Anchors, () => { });
+
+        public static bool TryMoveControlPoint(Scene scene, BezierControlPoint controlPoint, PointF target)
+        {
+            Vertex vertex = controlPoint.Vertex;
+            Edge? neighbor = controlPoint.NeighborEdge;
+            ContinuityType continuity = vertex.GetEffectiveContinuity();
+            if (neighbor == null || continuity == ContinuityType.G0 || neighbor.Type == EdgeType.Arc)
+            {
+                controlPoint.Position = target;
+                return true;
+            }
+
+            bool neighborIsIncoming = neighbor == vertex.InEdge;
+            if (neighbor.Type == EdgeType.Bezier)
+            {
+                controlPoint.Position = target;
+                BezierControlPoint opposite = neighborIsIncoming ? neighbor.BezierPoint2 : neighbor.BezierPoint1;
+                opposite.Position = ContinuityEnforcer.AlignedPoint(vertex.Position, NeighborTangent(controlPoint, neighborIsIncoming),
+                    opposite.Position, continuity, ContinuityEnforcer.BezierTangentScale);
+                return true;
+            }
+
+            Vertex far = neighbor.Other(vertex);
+            return Solve(scene, [vertex, far], () =>
+            {
+                controlPoint.Position = target;
+                far.MoveTo(ContinuityEnforcer.AlignedPoint(vertex.Position, NeighborTangent(controlPoint, neighborIsIncoming),
+                    far.Position, continuity, ContinuityEnforcer.LineTangentScale));
+            });
+        }
+        private static PointF NeighborTangent(BezierControlPoint controlPoint, bool neighborIsIncoming) =>
+            neighborIsIncoming ? GeometryUtils.Scale(controlPoint.Tangent, -1f) : controlPoint.Tangent;
 
         private static bool Solve(Scene scene, IEnumerable<Vertex> anchors, Action initialChange)
         {
@@ -42,6 +74,7 @@ namespace GKProjekt1.Constraints
 
             if (ok && scene.AllEdges.SelectMany(e => e.Constraints).All(c => c.IsSatisfied()))
             {
+                ContinuityEnforcer.EnforceAround(locked);
                 return true;
             }
 
@@ -77,7 +110,7 @@ namespace GKProjekt1.Constraints
             float length = edge.GetRequiredLength() ?? GeometryUtils.Length(current);
 
             PointF target = GeometryUtils.PointInDirection(fixedEnd.Position, direction, length);
-            if (GeometryUtils.Distance(target, other.Position) > Epsilon)
+            if (GeometryUtils.Distance(target, other.Position) > Eps)
             {
                 other.MoveTo(target);
                 locked.Add(other);

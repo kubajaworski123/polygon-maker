@@ -22,12 +22,26 @@ namespace GKProjekt1
             BezierPoint2 = new BezierControlPoint(this, PointF.Empty);
             ResetControlPoints();
         }
-        public void SetToLine() => Type = EdgeType.Line;
-        public void SetToArc() => Type = EdgeType.Arc;
+        public void SetToLine()
+        {
+            Type = EdgeType.Line;
+            EnforceContinuityAtEnds();
+        }
+        public void SetToArc()
+        {
+            Type = EdgeType.Arc;
+            EnforceContinuityAtEnds();
+        }
         public void SetToBezier()
         {
             Type = EdgeType.Bezier;
             ResetControlPoints();
+            EnforceContinuityAtEnds();
+        }
+        private void EnforceContinuityAtEnds()
+        {
+            ContinuityEnforcer.Enforce(Start);
+            ContinuityEnforcer.Enforce(End);
         }
         public void ResetControlPoints()
         {
@@ -57,6 +71,33 @@ namespace GKProjekt1
             float len = GetLength();
             return len < 1e-6f ? PointF.Empty : new PointF(d.X / len, d.Y / len);
         }
+        public PointF GetTangentAtStart() => Type switch
+        {
+            EdgeType.Bezier => GeometryUtils.Scale(GeometryUtils.DirectionVector(Start.Position, BezierPoint1.Position), 3f),
+            EdgeType.Arc => GetArcGeometry()?.TangentAtStart ?? GetDirection(),
+            _ => GetDirection()
+        };
+        public PointF GetTangentAtEnd() => Type switch
+        {
+            EdgeType.Bezier => GeometryUtils.Scale(GeometryUtils.DirectionVector(BezierPoint2.Position, End.Position), 3f),
+            EdgeType.Arc => GetArcGeometry()?.TangentAtEnd ?? GetDirection(),
+            _ => GetDirection()
+        };
+        public ArcGeometry? GetArcGeometry()
+        {
+            if (Start.InEdge != null && Start.GetEffectiveContinuity() != ContinuityType.G0)
+            {
+                return ArcGeometry.FromStartTangent(Start.Position, End.Position, IncomingTangent(Start.InEdge));
+            }
+            if (End.OutEdge != null && End.OutEdge.Type != EdgeType.Arc && End.GetEffectiveContinuity() != ContinuityType.G0)
+            {
+                return ArcGeometry.FromEndTangent(Start.Position, End.Position, End.OutEdge.GetTangentAtStart());
+            }
+            return ArcGeometry.Semicircle(Start.Position, End.Position);
+        }
+        private static PointF IncomingTangent(Edge incoming) => incoming.Type == EdgeType.Arc
+            ? ArcGeometry.Semicircle(incoming.Start.Position, incoming.End.Position).TangentAtEnd
+            : incoming.GetTangentAtEnd();
         public Vertex Other(Vertex v) => v == Start ? End : Start;
         public PointF? GetRequiredDirection() =>
             Constraints.Select(c => c.RequiredDirection(this)).FirstOrDefault(d => d.HasValue);
