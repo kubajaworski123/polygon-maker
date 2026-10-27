@@ -38,6 +38,15 @@ namespace GKProjekt1
             Paint += MainWindow_Paint;
             LibraryAlgorithmsRadioButton.CheckedChanged += StrategyRadioButton_CheckedChanged;
             BresenhamAlgorithmsRadioButton.CheckedChanged += StrategyRadioButton_CheckedChanged;
+            usageToolStripMenuItem.Click += (s, e) => ShowHelp(usageToolStripMenuItem.Text ?? "", HelpTopics.Usage);
+            assumptionsToolStripMenuItem.Click += (s, e) => ShowHelp(assumptionsToolStripMenuItem.Text ?? "", HelpTopics.Assumptions);
+            dataModelToolStripMenuItem.Click += (s, e) => ShowHelp(dataModelToolStripMenuItem.Text ?? "", HelpTopics.DataModel);
+            algoritmsToolStripMenuItem.Click += (s, e) => ShowHelp(algoritmsToolStripMenuItem.Text ?? "", HelpTopics.Algorithms);
+        }
+        private void ShowHelp(string title, string content)
+        {
+            using var dialog = new HelpDialog(title, content);
+            dialog.ShowDialog(this);
         }
         public void TransitionTo(IActionState newState)
         {

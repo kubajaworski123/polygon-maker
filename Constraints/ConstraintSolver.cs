@@ -8,7 +8,6 @@ namespace GKProjekt1.Constraints
     {
         private const float Eps = 0.01f;
         private const float LengthTolerance = 0.5f;
-
         public static bool TryMoveVertex(Scene scene, Vertex vertex, PointF target) =>
             Solve(scene, [vertex], () => vertex.MoveTo(target));
 
@@ -91,7 +90,6 @@ namespace GKProjekt1.Constraints
             {
                 return true;
             }
-
             Vertex other = edge.Other(fixedEnd);
 
             if (locked.Contains(other))
@@ -132,7 +130,6 @@ namespace GKProjekt1.Constraints
                 bool endLocked = locked.Contains(partner.End);
                 if (startLocked && endLocked)
                 {
-                    // Naruszenie (jeśli realne) wykryje końcowe sprawdzenie IsSatisfied.
                     continue;
                 }
 
