@@ -1,6 +1,7 @@
 using GKProjekt1.ClickDetect;
 using GKProjekt1.Constraints;
 using GKProjekt1.DrawingStrategies;
+using GKProjekt1.SceneSaving;
 using GKProjekt1.States;
 
 namespace GKProjekt1
@@ -42,6 +43,45 @@ namespace GKProjekt1
             assumptionsToolStripMenuItem.Click += (s, e) => ShowHelp(assumptionsToolStripMenuItem.Text ?? "", HelpTopics.Assumptions);
             dataModelToolStripMenuItem.Click += (s, e) => ShowHelp(dataModelToolStripMenuItem.Text ?? "", HelpTopics.DataModel);
             algoritmsToolStripMenuItem.Click += (s, e) => ShowHelp(algoritmsToolStripMenuItem.Text ?? "", HelpTopics.Algorithms);
+
+            var fileMenu = new ToolStripMenuItem("File");
+            fileMenu.DropDownItems.Add(new ToolStripMenuItem("Save...", null, (s, e) => SaveScene()));
+            fileMenu.DropDownItems.Add(new ToolStripMenuItem("Open...", null, (s, e) => OpenScene()));
+            menuStrip1.Items.Insert(0, fileMenu);
+        }
+        private void SaveScene()
+        {
+            using var dialog = new SaveFileDialog { Filter = "Scene (*.json)|*.json", DefaultExt = "json", AddExtension = true };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+            try
+            {
+                SceneFile.Save(scene, dialog.FileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Zapis");
+            }
+        }
+        private void OpenScene()
+        {
+            using var dialog = new OpenFileDialog { Filter = "Scene (*.json)|*.json" };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+            try
+            {
+                scene = SceneFile.Load(dialog.FileName);
+                currentState = new IdleState(this, scene);
+                Invalidate();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Odczyt");
+            }
         }
         private void ShowHelp(string title, string content)
         {
